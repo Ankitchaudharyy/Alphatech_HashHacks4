@@ -2,7 +2,7 @@
 
 *Problem Statement* :-
 
-1. While Training in the Gym, theres always a chance of injuring oneself due to **wrong posture** or improper handling of equipment.
+1. While Training in the Gym, there's always a chance of injuring oneself due to **wrong posture** or improper handling of equipment.
 
 2. To prevent injuries due to wrong posture, experienced gym trainers must have an eye on the person performing exercises but in india,    most of the gyms have 2 to 4 trainers at most and thus it's **not possible for trainer to give a personalized feedback about the posture to every one** exercising in the gym.
 
@@ -18,8 +18,8 @@
 
 5. As predicted by the ML model, we give the analysis report to the user while performing the exercise in the real time
 
-ex. *Your upper arm shows significant rotation around the shoulder when curling. Try holding your upper arm still, parallel to your   chest, and concentrate on rotating around your elbow only.*
+  ex. *Your upper arm shows significant rotation around the shoulder when curling. Try holding your upper arm still, parallel to your       chest, and concentrate on rotating around your elbow only.*
 
 6. By joining the keypoints of the user's body, a 2D image of the correct posture while exercising will be displayed on the smart mirror superimposed on the user's image on mirror along with  of the same exercise.
 
-This helps the performer to detect what is wrong with their posture and hence correct it to prevent any injuries.
+  This helps the performer to detect what is wrong with their posture and hence correct it to prevent any injuries.
