@@ -4,11 +4,11 @@
 
 1. While Training in the Gym, there's always a chance of injuring oneself due to **wrong posture** or improper handling of equipment.
 
-2. To prevent injuries due to wrong posture, experienced gym trainers must have an eye on the person performing exercises but in india,    most of the gyms have 2 to 4 trainers at most and thus it's **not possible for trainer to give a personalized feedback about the body posture to every one** exercising in the gym.
+2. To prevent injuries due to wrong body posture, experienced gym trainers must have an eye on the person performing exercises but in India,    most of the gyms have 2 to 4 trainers at most and thus it's **not possible for trainer to give a personalized feedback about the body posture to every one** exercising in the gym.
 
 *Solution* :-
 
-1. so this is where the concept of artificially intelligent a.k.a The AI Gym comes, which acts like your **personal gym trainer** and helps in **reducing the chance of injury while performing exercises by correcting your posture in the real time.**
+1. So this is where the concept of artificially intelligent a.k.a 'The AI Gym' comes, which acts like your **personal gym trainer** and helps in **reducing the chance of injury while performing exercises by correcting your body posture in the real time.**
 
 2. While exercising, the postures and motion of people will be captured using the cameras installed with the mirrors in the gym.
 
