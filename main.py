@@ -58,12 +58,15 @@ def main():
 
             else:
                 print('\nExercise could be improved:\n')
+
+            #TEXT TO SPEECH
             mytext = feedback
             language = 'en'
             myobj = gTTS(text=mytext, lang=language, slow=False)
             myobj.save('record.mp3')
             os.system('record.mp3')
             print(feedback)
+
         else:
             print('No video file specified.')
             return
