@@ -1,82 +1,92 @@
+import argparse
 import os
+import sys
+import subprocess
 import numpy as np
+import matplotlib.pyplot as plt
+
+from gtts import gTTS
+from parse import parse_sequence, load_ps
+from evaluate import evaluate_pose
 
 
-def evaluate_pose(pose_seq, exercise):
-    """
-    Evaluate a Pose Sequence for a Particular Exercise.
+def main():
+    parser = argparse.ArgumentParser(description='Pose Trainer')
+    parser.add_argument('--mode', type=str, default='evaluate', help='Pose Trainer application mode')
+    parser.add_argument('--display', type=int, default=1, help='display openpose video')
+    parser.add_argument('--input_folder', type=str, default='videos', help='input folder for videos')
+    parser.add_argument('--output_folder', type=str, default='poses', help='output folder for pose JSON')
+    parser.add_argument('--video', type=str, help='input video filepath for evaluation')
+    parser.add_argument('--file', type=str, help='input npy file for evaluation')
+    parser.add_argument('--exercise', type=str, default='bicep_curl', help='exercise type to evaluate')
 
-    Arguments:
-        pose_seq: PoseSequence object
-        exercise: String name of the Exercise to be Evaluated
+    args = parser.parse_args()
 
-    Returns:
-        correct: Bool whether Exercise was Performed Correctly
-        feedback: Feedback String
-    """
-    if exercise == 'bicep_curl':
-        return _bicep_curl(pose_seq)
+    if args.mode == 'batch_json':
+        # read filenames from the videos directory
+        videos = os.listdir(args.input_folder)
 
-    # More Exercises in Future
+        # openpose requires running from its directory
+        os.chdir("openpose")
 
-    else:
-        return (False, "Exercise String Not Recognized!!!")
+        for video in videos:
+            print('processing video file:' + video)
+            video_path = os.path.join('..', args.input_folder, video)
+            output_path = os.path.join('..', args.output_folder, os.path.splitext(video)[0])
+            openpose_path = os.path.join('bin', 'OpenPoseDemo.exe')
+            subprocess.call([openpose_path, 
+                            '--video', video_path, 
+                            '--write_json', output_path])
 
+    elif args.mode == 'evaluate':
+        if args.video:
+            print('processing video file...')
+            video = os.path.basename(args.video)
+            
+            output_path = os.path.join('..', os.path.splitext(video)[0])
+            openpose_path = os.path.join('bin', 'OpenPoseDemo.exe')
+            os.chdir('openpose')
+            subprocess.call([openpose_path, 
+                            '--video', os.path.join('..', args.video), 
+                            '--write_json', output_path])
+            parse_sequence(output_path, '..')
+            pose_seq = load_ps(os.path.join('..', os.path.splitext(video)[0] + '.npy'))
+            (correct, feedback) = evaluate_pose(pose_seq, args.exercise)
 
-def _bicep_curl(pose_seq):
+            if correct:
+                print('Exercise performed correctly!')
 
-    # Find the Arm that is seen most Consistently
-    poses = pose_seq.poses
-    right_present = [1 for pose in poses 
-            if pose.rshoulder.exists and pose.relbow.exists and pose.rwrist.exists]
-    left_present = [1 for pose in poses
-            if pose.lshoulder.exists and pose.lelbow.exists and pose.lwrist.exists]
-    right_count = sum(right_present)
-    left_count = sum(left_present)
-    side = 'right' if right_count > left_count else 'left'
-
-    print('Exercise Arm Detected as: {}.'.format(side))
-
-    if side == 'right':
-        joints = [(pose.rshoulder, pose.relbow, pose.rwrist, pose.rhip, pose.neck) for pose in poses]
-    else:
-        joints = [(pose.lshoulder, pose.lelbow, pose.lwrist, pose.lhip, pose.neck) for pose in poses]
-
-    # Filter out Data Points where a Part does not Exist
-    joints = [joint for joint in joints if all(part.exists for part in joint)]
-
-    upper_arm_vecs = np.array([(joint[0].x - joint[1].x, joint[0].y - joint[1].y) for joint in joints])
-    torso_vecs = np.array([(joint[4].x - joint[3].x, joint[4].y - joint[3].y) for joint in joints])
-    forearm_vecs = np.array([(joint[2].x - joint[1].x, joint[2].y - joint[1].y) for joint in joints])
-
-    # Normalize Vectors
-    upper_arm_vecs = upper_arm_vecs / np.expand_dims(np.linalg.norm(upper_arm_vecs, axis=1), axis=1)
-    torso_vecs = torso_vecs / np.expand_dims(np.linalg.norm(torso_vecs, axis=1), axis=1)
-    forearm_vecs = forearm_vecs / np.expand_dims(np.linalg.norm(forearm_vecs, axis=1), axis=1)
-
-    upper_arm_torso_angles = np.degrees(np.arccos(np.clip(np.sum(np.multiply(upper_arm_vecs, torso_vecs), axis=1), -1.0, 1.0)))
-    upper_arm_forearm_angles = np.degrees(np.arccos(np.clip(np.sum(np.multiply(upper_arm_vecs, forearm_vecs), axis=1), -1.0, 1.0)))
-
-    # Use Thresholds learned from Analysis
-    upper_arm_torso_range = np.max(upper_arm_torso_angles) - np.min(upper_arm_torso_angles)
-    upper_arm_forearm_min = np.min(upper_arm_forearm_angles)
-
-    print('Upper Arm and Torso Angle Range : {}'.format(upper_arm_torso_range))
-    print('Upper Arm and Forearm Minimum Angle : {}'.format(upper_arm_forearm_min))
-
-    correct = True
-    feedback = ''
-
-    if upper_arm_torso_range > 35.0:
-        correct = False
-        feedback += 'Your upper arm shows Significant Rotation around the shoulder when curling. Try holding your upper arm still, parallel to your chest, ' + \
-                    'and concentrate on rotating around your elbow only.\n'
+            else:
+                print('Exercise could be improved:')
+            mytext = feedback
+            language = 'en'
+            myobj = gTTS(text=mytext, lang=language, slow=False)
+            myobj.save('record.mp3')
+            os.system('record.mp3')
+            print(feedback)
+        else:
+            print('No video file specified.')
+            return
     
-    if upper_arm_forearm_min > 70.0:
-        correct = False
-        feedback += 'You are Not Curling the weight all the way to the Top, up to your shoulders. Try to curl your arm completely so that your forearm is parallel with your torso. It may help to use lighter weight.\n'
-
-    if correct:
-        return (correct, 'Exercise performed Correctly!!! Weight was lifted fully up, and upper arm did not move significantly!!!')
+    elif args.mode == 'evaluate_npy':
+        if args.file:
+            pose_seq = load_ps(args.file)
+            (correct, feedback) = evaluate_pose(pose_seq, args.exercise)
+            if correct:
+                print('Exercise performed correctly:')
+            else:
+                print('Exercise could be improved:')
+            print(feedback)
+        else:
+            print('No npy file specified.')
+            return
+    
     else:
-        return (correct, feedback)
+        print('Unrecognized mode option.')
+        return
+
+
+
+
+if __name__ == "__main__":
+    main()
